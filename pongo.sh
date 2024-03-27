@@ -5,6 +5,7 @@
 function globals {
   # Project related global variables
   PONGO_VERSION=2.10.0
+  REGISTRY_URL=${PONGO_REGISTRY_URL:-docker.io/}
 
   local script_path
   # explicitly resolve the link because realpath doesn't do it on Windows
@@ -132,22 +133,22 @@ function globals {
   # Dependency image defaults
   if [[ -z $POSTGRES_IMAGE ]] && [[ -n $POSTGRES ]]; then
     # backward compat; POSTGRES replaced by POSTGRES_IMAGE
-    export POSTGRES_IMAGE=postgres:$POSTGRES
+    export POSTGRES_IMAGE=${REGISTRY_URL}postgres:$POSTGRES
   fi
 
   if [[ -z $CASSANDRA_IMAGE ]] && [[ -n $CASSANDRA ]]; then
     # backward compat; CASSANDRA replaced by CASSANDRA_IMAGE
-    export CASSANDRA_IMAGE=cassandra:$CASSANDRA
+    export CASSANDRA_IMAGE=${REGISTRY_URL}cassandra:$CASSANDRA
   fi
 
   if [[ -z $REDIS_IMAGE ]] && [[ -n $REDIS ]]; then
     # backward compat; replaced by REDIS_IMAGE
-    export REDIS_IMAGE=redis:$REDIS-alpine
+    export REDIS_IMAGE=${REGISTRY_URL}redis:$REDIS-alpine
   fi
 
   if [[ -z $SQUID_IMAGE ]] && [[ -n $SQUID ]]; then
     # backward compat; replaced by SQUID_IMAGE
-    export SQUID_IMAGE=sameersbn/squid:$SQUID
+    export SQUID_IMAGE=${REGISTRY_URL}sameersbn/squid:$SQUID
   fi
 
   # proxy config, ensure it's set in all lower-case
@@ -475,7 +476,7 @@ function get_image {
     # go and pull the development image here
     if [[ "$KONG_VERSION" == "$DEVELOPMENT_CE" ]]; then
       # pull the Opensource development image
-      image=$DEVELOPMENT_CE_TAG
+      image=$REGISTRY_URL$DEVELOPMENT_CE_TAG
       docker pull "$image"
       if [[ ! $? -eq 0 ]]; then
         err "failed to pull the Kong CE development image $image"
@@ -483,7 +484,7 @@ function get_image {
 
     else
       # pull the Enterprise development image
-      image=$DEVELOPMENT_EE_TAG
+      image=$REGISTRY_URL$DEVELOPMENT_EE_TAG
       docker pull "$image"
       if [[ ! $? -eq 0 ]]; then
         err "failed to pull: $image"
@@ -493,9 +494,9 @@ function get_image {
   else
     # regular Kong release, fetch the OSS or Enterprise version if needed
     if is_enterprise "$KONG_VERSION"; then
-      image=$KONG_EE_TAG_PREFIX$KONG_VERSION$KONG_EE_TAG_POSTFIX
+      image=${REGISTRY_URL}$KONG_EE_TAG_PREFIX$KONG_VERSION$KONG_EE_TAG_POSTFIX
     else
-      image=$KONG_OSS_TAG_PREFIX$KONG_VERSION$KONG_OSS_TAG_POSTFIX
+      image=${REGISTRY_URL}$KONG_OSS_TAG_PREFIX$KONG_VERSION$KONG_OSS_TAG_POSTFIX
     fi
 
     docker inspect --type=image "$image" &> /dev/null
